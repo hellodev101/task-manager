@@ -30,3 +30,7 @@ def index(request):
             context["archived_tasks"].append(task)
     # render in tasks/home
     return render(request, "tasks/home.html", context)
+
+def task_detail(request):
+    return render(request, "tasks/task_detail.html", {
+    })
