@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.urls import reverse
 
 # Create your models here.
 class Task(models.Model):
@@ -32,7 +33,7 @@ class Task(models.Model):
                               null=True)
 
     def __str__(self):
-        return self.title
+        return f"{self.title} (ID: {self.id})"
 
-    # def get_absolute_url(self):
-    #     return reverse("_detail", kwargs={"pk": self.pk})
+    def get_absolute_url(self):
+        return reverse("tasks:task-detail", kwargs={"pk": self.pk})

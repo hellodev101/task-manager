@@ -1,0 +1,9 @@
+{% extends 'tasks/base.html' %}
+{% block content %}
+
+{% if task %}
+<h1>{{ task.title }}</h1>
+<p>{{task.description}}</p> 
+{% endif %}
+
+{% endblock %}

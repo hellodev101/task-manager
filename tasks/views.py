@@ -1,6 +1,10 @@
-from django.shortcuts import render
+from django.shortcuts import redirect, render
+from django.urls import reverse
 from .models import Task
-
+from .forms import TaskForm  # Assuming you have a TaskForm defined in forms.py
+from .models import Task  # Assuming you have a Task model defined in models.py
+from django.shortcuts import render, get_object_or_404
+from django.http import Http404, HttpResponse
 # Create your views here.
 def index(request):
     
@@ -25,12 +29,36 @@ def index(request):
         elif status == "IN_PROGRESS":
             context["in_progress_tasks"].append(task)
         elif status == "DONE":
-            context["done_tasks"].append(task)
+           context["done_tasks"].append(task)
         elif status == "ARCHIVED":
             context["archived_tasks"].append(task)
     # render in tasks/home
-    return render(request, "tasks/home.html", context)
+    return render(request, "tasks/index.html", context)
 
-def task_detail(request):
-    return render(request, "tasks/task_detail.html", {
-    })
+
+
+# def task_detail(request, pk):
+#     try:
+#         task = get_object_or_404(Task, pk=pk)
+#         return HttpResponse(f"Task: {task.title}, Status: {task.status}")
+#     except Http404:
+#         return HttpResponse("Task not found.", status=404)
+#     except Exception as e:
+#         return HttpResponse(f"An error occurred: {str(e)}", status=500)
+def task_detail(request, pk):
+    task = get_object_or_404(Task, pk=pk)
+    return render(request, 'tasks/task_detail.html', {'task': task})
+    
+def create_task(request):
+    if request.method == "POST":
+        form = TaskForm(request.POST)
+        if form.is_valid():
+            task = form.save()  # Save the new task
+            return redirect("tasks:task-detail", task.id)  # Correctly redirect to the task detail page
+        else:
+            # If the form is not valid, render the form with errors
+            return render(request, "tasks/task_form.html", {"form": form})  # Render the form with context
+    else:
+        form = TaskForm()  # Create an empty form for GET requests
+
+    return render(request, "tasks/task_form.html", {"form": form})  # Render the form with context
