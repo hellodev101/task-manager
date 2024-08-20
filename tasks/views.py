@@ -1,7 +1,9 @@
 from django.shortcuts import redirect, render
 from django.urls import reverse
+
+from tasks import services
 from .models import Task
-from .forms import TaskForm  # Assuming you have a TaskForm defined in forms.py
+from .forms import TaskForm, ContactForm  # Assuming you have a TaskForm defined in forms.py
 from .models import Task  # Assuming you have a Task model defined in models.py
 from django.shortcuts import render, get_object_or_404
 from django.http import Http404, HttpResponse
@@ -62,3 +64,29 @@ def create_task(request):
         form = TaskForm()  # Create an empty form for GET requests
 
     return render(request, "tasks/task_form.html", {"form": form})  # Render the form with context
+
+
+# Contact Us
+def contact_form(request):
+    if request.method == "POST":
+        form = ContactForm(request.POST)
+        if form.is_valid():
+            subject = form.cleaned_data.get("subject")
+            message = form.cleaned_data.get("message")
+            from_email = form.cleaned_data.get("from_email")
+            services.send_contact_email(subject, message, from_email,
+                                    ["your-email@example.com"])
+            return redirect("tasks:contact-success")
+        else:
+            return render(request, "tasks/contact_form.html", {"form": form})  
+    else:
+        form = ContactForm()  
+
+    return render(request, "tasks/contact_form.html", {"form": form})  
+
+def contact_success(request):
+    return render(request, 'tasks/contact_success.html')
+    
+    
+     
+       

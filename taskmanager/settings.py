@@ -41,6 +41,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'tasks',
     'rest_framework',
+    'storages',
+    'widget_tweaks',
 ]
 
 MIDDLEWARE = [
@@ -125,8 +127,22 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+# sent email
+if DEBUG:
+    # Using the console backend will simply print the email to the console
+    EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+else:
+ EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+ EMAIL_HOST = int(os.getenv("EMAIL_PORT", "1025"))   
+ EMAIL_PORT = os.getenv("EMAIL_USE_TLS", "False") == "True"
+ EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "default@example.com")
+ EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "defaultpassword")
