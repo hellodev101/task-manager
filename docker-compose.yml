@@ -12,6 +12,13 @@ services:
     ports:
       - "5432:5432"
 
+  mailhog:
+  image: mailhog/mailhog
+  container_name: mailhog
+  ports:
+    - "1025:1025" # SMTP server
+    - "8025:8025" # Web UI
+
 volumes:
   postgres_data:
 # ENV DJANGO_SETTINGS_MODULE=taskmanager.settings
