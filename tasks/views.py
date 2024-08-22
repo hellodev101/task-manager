@@ -1,12 +1,13 @@
 from django.shortcuts import redirect, render
 from django.urls import reverse
-
 from tasks import services
 from .models import Task
-from .forms import TaskForm, ContactForm  # Assuming you have a TaskForm defined in forms.py
-from .models import Task  # Assuming you have a Task model defined in models.py
+from .forms import TaskForm, ContactForm 
+from .models import Task  
 from django.shortcuts import render, get_object_or_404
 from django.http import Http404, HttpResponse
+
+
 # Create your views here.
 def index(request):
     
@@ -21,7 +22,6 @@ def index(request):
         "done_tasks": [],
         "archived_tasks": []
     }
-
     # Categories tasks into their respective lists
     for task in tasks:
         status = task.status.strip().upper()
@@ -38,7 +38,6 @@ def index(request):
     return render(request, "tasks/index.html", context)
 
 
-
 # def task_detail(request, pk):
 #     try:
 #         task = get_object_or_404(Task, pk=pk)
@@ -51,6 +50,7 @@ def task_detail(request, pk):
     task = get_object_or_404(Task, pk=pk)
     return render(request, 'tasks/task_detail.html', {'task': task})
     
+
 def create_task(request):
     if request.method == "POST":
         form = TaskForm(request.POST)
@@ -76,13 +76,15 @@ def contact_form(request):
             from_email = form.cleaned_data.get("from_email")
             services.send_contact_email(subject, message, from_email,
                                     ["your-email@example.com"])
-            return redirect("tasks:contact-success")
+            return redirect(reverse("tasks:contact-success"))
         else:
             return render(request, "tasks/contact_form.html", {"form": form})  
     else:
         form = ContactForm()  
 
     return render(request, "tasks/contact_form.html", {"form": form})  
+
+
 
 def contact_success(request):
     return render(request, 'tasks/contact_success.html')

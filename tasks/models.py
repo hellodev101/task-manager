@@ -37,3 +37,8 @@ class Task(models.Model):
 
     def get_absolute_url(self):
         return reverse("tasks:task-detail", kwargs={"pk": self.pk})
+
+class SubscribedEmail(models.Model):
+    email = models.EmailField()
+    task = models.ForeignKey(Task, on_delete=models.CASCADE, 
+                             related_name="watchers")
