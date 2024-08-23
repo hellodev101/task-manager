@@ -120,7 +120,7 @@ def create_task_on_sprint(request, pk):
             "description": request.POST.get("description", ""),
             "status": request.POST.get("status", "UNASSIGNED"),
         }
-        task = services.create_task_and_add_to_sprint(
+        task = services.can_add_task_to_sprint(
             task_data, pk, request.user
         )
         return redirect("tasks:task-detail", task_id=task.id)

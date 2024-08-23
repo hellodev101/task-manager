@@ -34,6 +34,7 @@ class Task(models.Model):
                               related_name="owned_tasks", 
                               on_delete=models.SET_NULL, 
                               null=True)
+    
 
 # create constraint status_check on model Task
     class Meta:

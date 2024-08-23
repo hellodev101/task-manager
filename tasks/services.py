@@ -13,6 +13,12 @@ def send_contact_email(subject: str, message: str, from_email: str, to_email: st
     send_mail(subject, message, from_email, [to_email])
 
 
+def can_add_task_to_sprint(task, sprint_id):
+    """ Checks if a task can be added to a sprint based on the sprint's date range."""
+    sprint = get_object_or_404(Sprint, id=sprint_id)
+    print(task.created_at.date(), "created")
+    return sprint.start_date <= task.created_at.date() <= sprint.end_date
+
 def create_task_and_add_to_sprint(task_data, sprint_id, creator):
     """
         This function not only creates a new task 
