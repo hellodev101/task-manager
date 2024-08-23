@@ -54,7 +54,11 @@ class Task(models.Model):
         return reverse("tasks:task-detail", kwargs={"pk": self.pk})
 
 
-    
+class SubscribedEmail(models.Model):
+    email = models.EmailField()
+    task = models.ForeignKey(Task, on_delete=models.CASCADE, 
+                             related_name="watchers")
+
 
 class Sprint(models.Model):
     """Sprint: A defined period during which specific work has to be completed and made ready for review."""
@@ -69,6 +73,7 @@ class Sprint(models.Model):
     creator = models.ForeignKey(User,
                                 related_name="created_sprints",
                                   on_delete=models.CASCADE)
+    # one task could be into one or more sprints and vice versa
     tasks = models.ManyToManyField('Task', related_name='sprints', blank=True)
     epic = models.ForeignKey('Epic', 
                              related_name='sprints',
@@ -82,3 +87,13 @@ class Sprint(models.Model):
                                    name='end_date_after_start_date'),
         ]
 
+class Epic(models.Model):
+    """Model definition for MODELNAME."""
+
+    name = models.CharField(max_length=200)
+    description = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    creator = models.ForeignKey(User, 
+                                related_name='created_epics',
+                                on_delete=models.CASCADE)

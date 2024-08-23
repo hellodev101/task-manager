@@ -1,5 +1,5 @@
-from django.urls import path, register_converter
-from django.views.generic import TemplateView
+# from django.urls import path, register_converter
+from django.urls import path
 from . import views
 from .views import (TaskListView)
 

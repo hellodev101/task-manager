@@ -7,23 +7,16 @@ from tasks import services
 from .forms import TaskForm, ContactForm 
 from .models import Task, Sprint
 from django.shortcuts import render, get_object_or_404
-from django.http import Http404, HttpResponse
 from django.views.generic import ListView
 from django.urls import reverse, reverse_lazy
 from django.views.generic.edit import DeleteView, UpdateView
-# from .mixins import SprintTaskMixin
 from . import services
-from django.http import (
-    Http404,
-    HttpRequest,
-    HttpResponse,
-    HttpResponseRedirect,
-    JsonResponse,
-)
+from django.http import (Http404, HttpRequest, HttpResponse, JsonResponse)
+from rest_framework import status
 
 # Task Homepage
 def index(request):
-    
+       
     #Fetch all tasks using status filter
     tasks = Task.objects.filter(status__in=["UNASSIGNED", "IN_PROGRESS", 
                                             "DONE", "ARCHIVED"])
@@ -116,8 +109,10 @@ def contact_success(request):
     return render(request, 'tasks/contact_success.html')
 
 
-# create a new task within a sprint
+
 def create_task_on_sprint(request, pk):
+
+    """ Create a new task within a sprint"""
 
     if request.method == "POST":
         task_data: dict[str, str] = {
@@ -130,6 +125,20 @@ def create_task_on_sprint(request, pk):
         )
         return redirect("tasks:task-detail", task_id=task.id)
     raise Http404("Not found")
+
+
+def claim_task_view(request, task_id):
+
+    """ Once the task has an owner set, nobody else can calim ownership """
+
+    user_id = (request.user.id) 
+    try:
+        services.claim_task(user_id, task_id)
+        return JsonResponse({"message": "Task successfully claimed."})
+    except Task.DoesNotExist:
+        return HttpResponse("Task does not exist.", status=status.HTTP_404_NOT_FOUND)
+    except services.TaskAlreadyClaimedException:
+        return HttpResponse("Task is already claimed or completed.", status=status.HTTP_400_BAD_REQUEST)
 
 
 
