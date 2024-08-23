@@ -1,14 +1,27 @@
+from datetime import date
+from django.forms import ValidationError
 from django.shortcuts import redirect, render
 from django.urls import reverse
+from psycopg import Transaction
 from tasks import services
-from .models import Task
 from .forms import TaskForm, ContactForm 
-from .models import Task  
+from .models import Task, Sprint
 from django.shortcuts import render, get_object_or_404
 from django.http import Http404, HttpResponse
+from django.views.generic import ListView
+from django.urls import reverse, reverse_lazy
+from django.views.generic.edit import DeleteView, UpdateView
+# from .mixins import SprintTaskMixin
+from . import services
+from django.http import (
+    Http404,
+    HttpRequest,
+    HttpResponse,
+    HttpResponseRedirect,
+    JsonResponse,
+)
 
-
-# Create your views here.
+# Task Homepage
 def index(request):
     
     #Fetch all tasks using status filter
@@ -38,19 +51,18 @@ def index(request):
     return render(request, "tasks/index.html", context)
 
 
-# def task_detail(request, pk):
-#     try:
-#         task = get_object_or_404(Task, pk=pk)
-#         return HttpResponse(f"Task: {task.title}, Status: {task.status}")
-#     except Http404:
-#         return HttpResponse("Task not found.", status=404)
-#     except Exception as e:
-#         return HttpResponse(f"An error occurred: {str(e)}", status=500)
+# Show all task list
+class TaskListView(ListView):
+    model = Task
+    template_name = "task_list.html"
+    context_object_name = "tasks"
+
+# Task Detail
 def task_detail(request, pk):
     task = get_object_or_404(Task, pk=pk)
     return render(request, 'tasks/task_detail.html', {'task': task})
     
-
+# Create A new Task
 def create_task(request):
     if request.method == "POST":
         form = TaskForm(request.POST)
@@ -64,6 +76,22 @@ def create_task(request):
         form = TaskForm()  # Create an empty form for GET requests
 
     return render(request, "tasks/task_form.html", {"form": form})  # Render the form with context
+
+
+# Delete Task
+class TaskDeleteView(DeleteView):
+    model = Task
+    template_name = "tasks/task_confirm_delete.html"
+    success_url = reverse_lazy("tasks:task-list")
+
+
+# Show Task By List By Date
+def task_by_date(request: HttpRequest, by_date: date) -> HttpResponse:
+    tasks = services.get_task_by_date(by_date)
+    context = {}  # data to inject into the template
+    return render(request, "task_list.html", {
+        "tasks": tasks
+    })
 
 
 # Contact Us
@@ -84,10 +112,30 @@ def contact_form(request):
 
     return render(request, "tasks/contact_form.html", {"form": form})  
 
-
-
 def contact_success(request):
     return render(request, 'tasks/contact_success.html')
+
+
+# create a new task within a sprint
+def create_task_on_sprint(request, pk):
+
+    if request.method == "POST":
+        task_data: dict[str, str] = {
+            "title": request.POST["title"],
+            "description": request.POST.get("description", ""),
+            "status": request.POST.get("status", "UNASSIGNED"),
+        }
+        task = services.create_task_and_add_to_sprint(
+            task_data, pk, request.user
+        )
+        return redirect("tasks:task-detail", task_id=task.id)
+    raise Http404("Not found")
+
+
+
+
+    
+
     
     
      
