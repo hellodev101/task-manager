@@ -43,7 +43,9 @@ INSTALLED_APPS = [
     'rest_framework',
     'storages',
     'widget_tweaks',
+    'accounts',
 ]
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -151,3 +153,7 @@ else:
  EMAIL_PORT = os.getenv("EMAIL_USE_TLS", "False") == "True"
  EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "default@example.com")
  EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "defaultpassword")
+
+
+#  LOGIN_REDIRECT_URL = "tasks:index"
+#  LOGOUT_REDIRECT_URL = "accounts:login"
