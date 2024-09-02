@@ -1,0 +1,52 @@
+{% extends "tasks/base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-center align-items-center">
+    <div class="container text-center">
+        <div class="card">
+            {% comment %} <h1 class="mb-4 ">Sprint Name: {{ sprint.name}}</h1> {% endcomment %}
+            <div class="card-body">
+                <h2 class="card-title">Sprint Name: {{ sprint.name}}</h2>
+                <p class="card-text">Description: {{ sprint.description }}</p>
+                <p class="card-text">start: {{ sprint.start_date }}</p>
+                <p class="card-text">end: {{ sprint.end_date }}</p>
+                <p class="card-text">creator: {{ sprint.creator }}</p>
+                
+                {% if tasks %}                
+                    {% for task in tasks %}
+                    <p class="card-text"> Task title: {{ task.title}}</p>
+                    <p class="card-text">owner: {{ task.owner}}</p>
+                    {% endfor %} 
+                
+                {% else %}
+                <p class="card-text">Task title:  No task added yet</p>
+                   <button type="button" class="btn btn-primary ms-2" onclick="addTask()">+</button>
+
+                 <form class="add-task-to-sprint" method="POST">
+                     {% csrf_token %}
+                     <input type="text" name="title"  placeholder="Task Title" required>
+                     <textarea name="task-description" placeholder="Task Description"></textarea>
+                     <select name="status">
+                        {% for status in tasks.status %}
+                            <option value="{{ status }}">{{ status }}</option>
+                        {% endfor %}
+                    </select>
+                     <button type="submit">Create Task</button>
+                 </form>
+                {% endif %}
+
+                
+                {% if error %}
+                <div class="alert alert-danger">
+                    {{ error }}
+                </div>
+            {% endif %}
+                    
+
+             
+                
+            </div>
+        </div>  
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,54 @@
+{% extends 'tasks/base.html' %}
+{% load static %}
+{% load widget_tweaks %}
+
+{% block content %}
+<div class="d-flex justify-content-center align-items-center">
+    <div class="card">
+        <div class="card-header">
+            <h2 class="text-center">Create a new Sprint</h2>
+        </div>
+        <div class="card-body">
+            <form method="post" action="{% url 'tasks:new-sprint' %}">
+                {% csrf_token %}
+                
+                {% for field in form %}
+                <div class="mb-3">
+                    <label for="{{ field.id_for_label }}" class="form-label">
+                        {{ field.label }}
+                        
+                        {% if field.label == "Select Tasks" %}    
+                        {% endif %}
+                            
+                    </label>
+                    
+                    {% if field.errors %}
+                        <div class="alert alert-danger">
+                            {{ field.errors }}
+                        </div>
+                    {% endif %}
+
+                    {% if field.field.widget_type == 'SelectMultiple' %}
+                        {{ field|add_class:"form-check-input" }}
+                        
+                    {% else %}
+                        {{ field|add_class:"form-control" }}
+                    {% endif %}
+                </div>                                                
+                {% endfor %}
+                <button type="submit" class="btn btn-primary w-100">
+                    Save
+                </button>                                                
+            </form>
+        </div>
+    </div>
+</div>
+    
+{% block script %}
+<script src="{% static 'tasks/main.js' %}"></script>
+{% endblock %}
+
+{% endblock %}
+
+
+

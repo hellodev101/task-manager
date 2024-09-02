@@ -49,7 +49,8 @@ class Task(models.Model):
         ]
     
     def __str__(self):
-        return f"{self.title} (ID: {self.id})"
+        return f"{str(self.title)}, {str(self.status)}, {str(self.owner)}"
+    
 
     def get_absolute_url(self):
         return reverse("tasks:task-detail", kwargs={"pk": self.pk})
@@ -87,6 +88,12 @@ class Sprint(models.Model):
             models.CheckConstraint(check=models.Q(end_date__gt=models.F('start_date')),
                                    name='end_date_after_start_date'),
         ]
+
+    def __str__(self):
+        return f"{self.name} (ID: {self.id}, {self.start_date}, {self.end_date})"
+    
+    def get_absolute_url(self):
+        return reverse("tasks:sprint-detail", kwargs={"pk": self.pk})
 
 class Epic(models.Model):
     """Model definition for MODELNAME."""

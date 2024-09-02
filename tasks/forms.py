@@ -2,7 +2,7 @@ from django import forms
 from django.http import Http404
 from django.forms import modelformset_factory
 from tasks import services
-from .models import Task, SubscribedEmail
+from .models import Task, SubscribedEmail, Sprint
 from tasks.validator import EmailListField
 
 
@@ -36,6 +36,28 @@ class ContactForm(forms.Form):
     form_email = forms.EmailField(required=True)
     subject = forms.CharField(required=True)
     message = forms.CharField(widget=forms.Textarea, required=True)
+
+
+class SprintForm(forms.ModelForm):
+    class Meta:
+        model = Sprint
+        fields = ['name', 'description', 'start_date', 'end_date', 'creator', 'tasks', 'epic']
+        widgets = {
+             'start_date': forms.DateInput(attrs={'type': 'date'}),
+             'end_date': forms.DateInput(attrs={'type': 'date'}),
+            'tasks': forms.SelectMultiple(),  #  dropdown
+        }
+
+        labels = {
+            'name': 'Sprint Name',
+            'description': 'Sprint Description',
+            'start_date': 'Start Date',
+            'end_date': 'End Date',
+            'creator': 'Creator',
+            'tasks': 'Select Tasks',
+            'epic': 'Related Epic',
+        }
+
 
 
 

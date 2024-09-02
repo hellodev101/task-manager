@@ -3,25 +3,30 @@ from django.forms import ValidationError
 from django.shortcuts import redirect, render
 from django.urls import reverse
 from psycopg import Transaction
+from . import services
 from tasks import services
-from .forms import TaskForm, ContactForm 
+from .forms import TaskForm, ContactForm, SprintForm
 from .models import Task, Sprint
 from django.shortcuts import render, get_object_or_404
 from django.views.generic import ListView
 from django.urls import reverse, reverse_lazy
 from django.views.generic.edit import DeleteView, UpdateView
-from . import services
-from django.http import (Http404, HttpRequest, HttpResponse, JsonResponse)
+from django.http import (Http404, HttpRequest, HttpResponse, HttpResponseRedirect, JsonResponse)
 from rest_framework import status
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth.models import User
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
 
-# Task Homepage
+
+
+@login_required
 def index(request):
        
     #Fetch all tasks using status filter
     tasks = Task.objects.filter(status__in=["UNASSIGNED", "IN_PROGRESS", 
                                             "DONE", "ARCHIVED"])
-    # Initialize dictionaries to hold tasks by status
-    # context = defaultdict(list)
     context = {
         "unassigned_tasks": [],
         "in_progress_tasks": [],
@@ -56,6 +61,7 @@ def task_detail(request, pk):
     return render(request, 'tasks/task_detail.html', {'task': task})
     
 # Create A new Task
+@login_required
 def create_task(request):
     if request.method == "POST":
         form = TaskForm(request.POST)
@@ -109,36 +115,95 @@ def contact_success(request):
     return render(request, 'tasks/contact_success.html')
 
 
-
-def create_task_on_sprint(request, pk):
-
-    """ Create a new task within a sprint"""
+@login_required 
+def create_task_on_sprint(request: HttpRequest, pk: int) -> HttpResponseRedirect:
+    sprint_id = get_object_or_404(Sprint, pk=pk)  # Ensure the sprint exists
+    
 
     if request.method == "POST":
+        title = request.POST.get("title")
+        if not title:
+            raise Http404("Title is required")  # Validate title presence
+
         task_data: dict[str, str] = {
-            "title": request.POST["title"],
+            "title": title,
             "description": request.POST.get("description", ""),
             "status": request.POST.get("status", "UNASSIGNED"),
         }
-        task = services.can_add_task_to_sprint(
-            task_data, pk, request.user
-        )
-        return redirect("tasks:task-detail", task_id=task.id)
+        user = request.user
+        task = services.create_task_and_add_to_sprint(task_data, sprint_id, user)
+        return redirect("tasks:task-detail", task.id)
+    
     raise Http404("Not found")
 
 
-def claim_task_view(request, task_id):
+@login_required 
+def create_sprint_view(request):
+    if request.method == "POST":
+        form = SprintForm(request.POST)
+        if form.is_valid():
+            sprint = form.save()  # Save the new task
+            return redirect("tasks:sprint-detail", sprint.id)
+        else:
+            # If the form is not valid, render the form with errors
+            return render(request, "tasks/sprint_form.html", {"form": form})  
+    else:
+        form = SprintForm()  # Create an empty form for GET requests
 
-    """ Once the task has an owner set, nobody else can calim ownership """
+    return render(request, "tasks/sprint_form.html", {"form": form})  
 
-    user_id = (request.user.id) 
-    try:
-        services.claim_task(user_id, task_id)
-        return JsonResponse({"message": "Task successfully claimed."})
-    except Task.DoesNotExist:
-        return HttpResponse("Task does not exist.", status=status.HTTP_404_NOT_FOUND)
-    except services.TaskAlreadyClaimedException:
-        return HttpResponse("Task is already claimed or completed.", status=status.HTTP_400_BAD_REQUEST)
+
+def sprint_list(request):
+    sprints = Sprint.objects.all()
+    return render(request, "tasks/sprint_list.html", {
+        "sprints": sprints
+    })
+
+def sprint_detail(request, pk):
+    sprint = get_object_or_404(Sprint, pk=pk)    
+    tasks = Task.objects.filter(sprints__id=pk)
+
+    if request.method == 'POST': 
+        title = request.POST.get("title")
+        description = request.POST.get("task-description")
+        status = request.POST.get("status", "UNASSIGNED")
+        
+        task_data: dict[str, str] = {
+            "title": title,
+            "description": description,
+            "status": status
+        }
+        user = request.user
+        
+        try:
+            task = services.create_task_and_add_to_sprint(task_data, sprint.id, user)
+            return redirect('tasks:index')  # Redirect to the same sprint detail page
+        except Exception as error:
+            messages.error(request, str(error))  # Capture the exception message
+            print(error, "error message")
+            return render(request, 'tasks/sprint_detail.html', 
+                  {'sprint': sprint,
+                   'tasks': tasks,
+                   'error': error
+                   })
+
+    return render(request, 'tasks/sprint_detail.html', 
+                  {'sprint': sprint,
+                   'tasks': tasks,
+                   })
+    
+
+
+# def remove_task_view(request, sprint_id, task_id):
+#     remove_task_from_sprint(sprint_id, task_id)
+#     return JsonResponse({'status': 'success'})
+
+
+# def set_sprint_epic_view(request, sprint_id, epic_id):
+#     set_sprint_epic(sprint_id, epic_id)
+#     return JsonResponse({'status': 'success'})
+
+
 
 
 
